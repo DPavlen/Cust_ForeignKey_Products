@@ -33,6 +33,7 @@ black = "^24.4.2"
 celery = "^5.4.0"
 redis = "^5.0.7"
 dynaconf = "^3.2.6"
+django-model-utils = "^4.5.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
