@@ -27,8 +27,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "djoser",
+    "rest_framework",
+    "rest_framework.authtoken",
     "users.apps.UsersConfig",
+    "api.apps.ApiConfig",
     "products.apps.ProductsConfig",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
 
 MIDDLEWARE = [
@@ -109,8 +114,69 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = "static/"
+# --------------------------------------------
+#    Настройка Статики и Медиа backenda
+# --------------------------------------------
+STATIC_URL = "/backend_static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+MEDIA_URL = "/backend_media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.CustUser"
+
+
+# --------------------------------------------
+#    Настройка REST_FRAMEWORK
+# --------------------------------------------
+REST_FRAMEWORK = {
+    "DATETIME_FORMAT": "%d.%m.%Y %H:%M:%S",
+
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend"
+    ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+
+# --------------------------------------------
+#    Настройка DJOSER
+# --------------------------------------------
+DJOSER = {
+    "SERIALIZERS": {
+        "user_create": "users.serializers.CustomUserSerializer",
+        "user": "users.serializers.CustomUserSerializer",
+        "current_user": "users.serializers.CustomUserSerializer",
+    },
+    "PERMISSIONS": {
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
+    },
+}
+HIDE_USERS = True
+
+# ------------------------------------------------
+#    Настройка SPECTACULAR_SETTINGS для SWAGGERA
+# ------------------------------------------------
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Cust_ForeignKey_Products",
+    "VERSION": "1.0.0",
+    "DESCRIPTION": "Cust_ForeignKey_Products: Backend",
+    "CONTACT": {
+        "name": "Cust_ForeignKey_Products",
+        "url": "https://github.com/DPavlen/Cust_ForeignKey_Products",
+        "email": "jobpavlenko@yandex.ru",
+    },
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_COERCE_PATH_PK_SUFFIX": True,
+    "SORT_OPERATIONS": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
+}
+

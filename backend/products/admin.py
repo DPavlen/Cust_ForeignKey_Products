@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from products.models import Attr, Product, ProductAttr
+from products.models import Attr, Product, ProductAttr, UniqueProduct
 
 
 class BaseAdminSettings(admin.ModelAdmin):
@@ -41,4 +41,15 @@ class ProductAttrAdmin(admin.ModelAdmin):
     list_display = ("id", "product", "attr", "value", "created")
     search_fields = ("id", "product", "attr", "value", "created")
     list_filter = ("id", "product", "attr", "value", "created")
+    empty_value_display = "-пусто-"
+
+
+@admin.register(UniqueProduct)
+class UniqueProductAdmin(admin.ModelAdmin):
+    """
+    Административный интерфейс для управления уникальными продуктами.
+    """
+    list_display = ("id", "product", "attr")
+    search_fields = ("id", "product__name", "attr__name")
+    list_filter = ("product", "attr")
     empty_value_display = "-пусто-"
