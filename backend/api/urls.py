@@ -1,9 +1,11 @@
 from django.urls import include, path
 from rest_framework import routers
 
+from products.views import ProductViewSet, UniqueProductViewSet
 
 router = routers.DefaultRouter()
-# router.register(r"tasks", TaskViewSet)
+router.register(r"products", ProductViewSet)
+router.register(r"unique-products", UniqueProductViewSet)
 
 
 urlpatterns = [
