@@ -27,6 +27,7 @@ class ProductAdmin(BaseAdminSettings):
     Административный интерфейс для управления продуктами.
     """
     def get_attrs(self, obj):
+        """Получаем имена атрибутов."""
         return " ; ".join([attr.name for attr in obj.attrs.all()])
     get_attrs.short_description = "Атрибуты у продукта"
 
@@ -49,7 +50,14 @@ class UniqueProductAdmin(admin.ModelAdmin):
     """
     Административный интерфейс для управления уникальными продуктами.
     """
-    list_display = ("id", "product", "attr")
-    search_fields = ("id", "product__name", "attr__name")
-    list_filter = ("product", "attr")
+    def get_attrs(self, obj):
+        """Получаем ManyToManyField из связанной ProductAttr."""
+        return " ; ".join([product_attr.value for product_attr in
+                           ProductAttr.objects.filter(product=obj.product)])
+
+    get_attrs.short_description = "Уникальные атрибуты продукта"
+
+    list_display = ("id", "product", "get_attrs")
+    search_fields = ("id", "product__name")
+    list_filter = ("product", "attrs")
     empty_value_display = "-пусто-"

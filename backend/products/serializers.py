@@ -1,3 +1,5 @@
+from typing import List, Any
+
 from rest_framework import serializers
 
 from products.models import Attr, Product, ProductAttr, UniqueProduct
@@ -21,16 +23,6 @@ class ProductAttrSerializer(serializers.ModelSerializer):
         fields = ("id", "product_name", "attr_name", "value")
 
 
-class UniqueProductSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели уникального продукта."""
-    product = serializers.CharField(source="product.name", read_only=True)
-    attr = ProductAttrSerializer()
-
-    class Meta:
-        model = UniqueProduct
-        fields = ("id", "product", "attr")
-
-
 class ProductSerializer(serializers.ModelSerializer):
     """Сериализатор для модели продукта."""
     user = serializers.SerializerMethodField()
@@ -45,6 +37,15 @@ class ProductSerializer(serializers.ModelSerializer):
         """Получаем username пользователя."""
         return instance.user.username
 
-    def get_attrs_name(self, obj):
-        """Получаем список имён атрибутов."""
+    def get_attrs_name(self, obj) -> list[Any]:
+        """Получаем список имён атрибутов продукта."""
         return [attr.name for attr in obj.attrs.all()]
+
+
+class UniqueProductSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели уникального продукта."""
+    product = ProductSerializer()
+
+    class Meta:
+        model = UniqueProduct
+        fields = ("id", "product")
