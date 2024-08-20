@@ -1,0 +1,79 @@
+version: '3.8'
+
+volumes:
+  static:
+  backend_static:
+  backend_media:
+  pg_data:
+
+networks:
+  foreignkey:
+    driver: bridge
+
+services:
+
+  db:
+    image: postgres:13.0-alpine
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data/
+    networks:
+      - foreignkey
+
+  backend:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    volumes:
+      - backend_static:/app/static/
+      - backend_media:/app/media/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - foreignkey
+#    command: >
+#      bash -c "poetry run python manage.py makemigrations &&
+#               poetry run python manage.py migrate &&
+#               poetry run python manage.py search_index --rebuild &&
+#               poetry run python manage.py runserver 0.0.0.0:8000"
+
+  nginx:
+    build:
+      context: ./infra
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always
+    volumes:
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static:/app/static/
+      - backend_static:/backend_static/
+      - backend_media:/backend_media/
+    networks:
+      - foreignkey
+
+
+  pytest:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      - db
+    networks:
+      - foreignkey

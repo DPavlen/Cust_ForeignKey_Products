@@ -35,23 +35,24 @@ class UniqueProductTest(TestCase):
         self.unique_product_2 = UniqueProduct.objects.create(product=self.product_2)
         self.unique_product_2.attrs.add(self.product_attr_3, self.product_attr_4)
 
+
     def test_all_method(self):
-        """Проверка работы метода all() в дескрипторе."""
+        """Проверка работы метода all()."""
 
         unique_products_1 = self.product_1.unique_products.all()
         unique_products_2 = self.product_2.unique_products.all()
 
         # Добавляем различные проверки
-        # self.assertEqual(len(unique_products_1), 1)
-        # self.assertEqual(len(unique_products_2), 1)
-        # self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_taste).exists())
-        # self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_color).exists())
-        # self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_taste).exists())
-        # self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_color).exists())
-        #
+        self.assertEqual(len(unique_products_1), 1)
+        self.assertEqual(len(unique_products_2), 1)
+        self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_taste).exists())
+        self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_color).exists())
+        self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_taste).exists())
+        self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_color).exists())
+
         # Проверка общего количества уникальных продуктов
-        # total_unique_products = UniqueProduct.objects.count()
-        # self.assertEqual(total_unique_products, 2)
+        total_unique_products = UniqueProduct.objects.count()
+        self.assertEqual(total_unique_products, 2)
 
     def test_generate_method(self):
         """Проверка работы метода generate()."""
@@ -61,14 +62,14 @@ class UniqueProductTest(TestCase):
         self.assertEqual(unique_product.product, self.product_1)
         self.assertTrue(UniqueProduct.objects.filter(id=unique_product.id).exists())
 
-    def test_custom_related_manager(self):
-        # Получаем имя self.product_1
-        product = Product.objects.get(name="Тест Колбаса докторская")
-
-        # Получаем связанные объекты через кастомный внешний ключ
-        unique_products = product.unique_products.all()
-
-        # Проверяем, что обратное связывание через кастомный внешний ключ
-        # работает корректно
-        self.assertEqual(len(unique_products), 1)
-        self.assertEqual(unique_products[0], self.unique_product_1)
+    # def test_custom_related_manager(self):
+    #     # Получаем имя self.product_1
+    #     product = Product.objects.get(name="Тест Колбаса докторская")
+    #
+    #     # Получаем связанные объекты через кастомный внешний ключ
+    #     unique_products = product.unique_products.all()
+    #
+    #     # Проверяем, что обратное связывание через кастомный внешний ключ
+    #     # работает корректно
+    #     self.assertEqual(len(unique_products), 1)
+    #     self.assertEqual(unique_products[0], self.unique_product_1)

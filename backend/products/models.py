@@ -47,7 +47,9 @@ class Product(TimeStampedModel):
         CustUser,
         on_delete=models.CASCADE,
         related_name="products",
-        verbose_name="Пользователь"
+        verbose_name="Пользователь",
+        null=True,
+        blank=True,
     )
     name = models.CharField(
         "Название продукта",
@@ -129,9 +131,9 @@ class CustForeignKey(ForeignKey):
 class UniqueProductManager(models.Manager):
     """Кастомный менеджер для модели UniqueProduct.
     field (CustForeignKey): Поле, связанное с этой моделью."""
-    def __init__(self, field, *args, **kwargs):
+    def __init__(self, field):
+        super().__init__()
         self.field = field
-        super().__init__(*args, **kwargs)
 
     def all(self):
         """Переопределяет метод all() для использования кастомного менеджера."""
@@ -166,6 +168,7 @@ class UniqueProduct(TimeStampedModel):
         verbose_name="Атрибуты уникального продукта"
     )
     objects = UniqueProductManager(field=CustForeignKey("Product", on_delete=models.PROTECT))
+    # objects = UniqueProductManager(field="product")
 
     class Meta:
         verbose_name = "Уникальный продукт"
