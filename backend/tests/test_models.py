@@ -35,7 +35,6 @@ class UniqueProductTest(TestCase):
         self.unique_product_2 = UniqueProduct.objects.create(product=self.product_2)
         self.unique_product_2.attrs.add(self.product_attr_3, self.product_attr_4)
 
-
     def test_all_method(self):
         """Проверка работы метода all()."""
 
@@ -62,14 +61,19 @@ class UniqueProductTest(TestCase):
         self.assertEqual(unique_product.product, self.product_1)
         self.assertTrue(UniqueProduct.objects.filter(id=unique_product.id).exists())
 
-    # def test_custom_related_manager(self):
-    #     # Получаем имя self.product_1
-    #     product = Product.objects.get(name="Тест Колбаса докторская")
-    #
-    #     # Получаем связанные объекты через кастомный внешний ключ
-    #     unique_products = product.unique_products.all()
-    #
-    #     # Проверяем, что обратное связывание через кастомный внешний ключ
-    #     # работает корректно
-    #     self.assertEqual(len(unique_products), 1)
-    #     self.assertEqual(unique_products[0], self.unique_product_1)
+    def test_cust_related_manager(self):
+        # Получаем имя self.product_1
+        product = Product.objects.get(name="Тест Колбаса докторская")
+
+        # Получаем связанные объекты через кастомный внешний ключ
+        unique_products = product.unique_products.all()
+
+        # Проверяем что данные в unique_products есть
+        self.assertIsNotNone(unique_products)
+
+        # Проверяем, что обратное связывание через кастомный внешний ключ
+        # работает корректно
+        self.assertEqual(len(unique_products), 1)
+
+        # Проверяем, что уникальный продукт совпадает с ожидаемым
+        self.assertEqual(unique_products[0], self.unique_product_1)

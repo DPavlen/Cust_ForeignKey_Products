@@ -113,27 +113,17 @@ class CustForeignKey(ForeignKey):
     """
     Кастомный внешний ключ для установки связи "ManyToOne" между моделями.
     Обеспечивает использование кастомного менеджера для обратных связей.
-    related_accessor_class: Менеджер, для обработки обратной
-    связи через этот внешний ключ.
     """
-    def __init__(self, to, on_delete, **kwargs):
-        """Инициализация кастомного внешнего ключа."""
-        self.related_accessor_class = UniqueProductManager
-        super().__init__(to, on_delete, **kwargs)
 
     def contribute_to_related_class(self, cls, related):
         """Настройка класса модели для использования кастомного менеджера
         при обращении к обратной связи."""
         super().contribute_to_related_class(cls, related)
-        setattr(cls, self.name, self.related_accessor_class(self))
+        setattr(cls, self.name, UniqueProductManager())
 
 
 class UniqueProductManager(models.Manager):
-    """Кастомный менеджер для модели UniqueProduct.
-    field (CustForeignKey): Поле, связанное с этой моделью."""
-    def __init__(self, field):
-        super().__init__()
-        self.field = field
+    """Кастомный менеджер для модели UniqueProduct."""
 
     def all(self):
         """Переопределяет метод all() для использования кастомного менеджера."""
@@ -141,7 +131,7 @@ class UniqueProductManager(models.Manager):
 
     def generate(self, instance):
         """Создает уникальный продукт на основе переданного экземпляра."""
-        return UniqueProduct.objects.create(product=instance)
+        return self.create(product=instance)
 
 
 class UniqueProduct(TimeStampedModel):
@@ -167,8 +157,7 @@ class UniqueProduct(TimeStampedModel):
         related_name="unique_products",
         verbose_name="Атрибуты уникального продукта"
     )
-    objects = UniqueProductManager(field=CustForeignKey("Product", on_delete=models.PROTECT))
-    # objects = UniqueProductManager(field="product")
+    objects = UniqueProductManager()
 
     class Meta:
         verbose_name = "Уникальный продукт"
