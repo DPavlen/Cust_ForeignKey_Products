@@ -1,5 +1,3 @@
-![image](https://github.com/user-attachments/assets/f4a08bc2-d27a-4b30-a3c5-738cccf7d623)# Cust_ForeignKey_Products
-
 ## 1. [Задание и требования](#1)
 ## 2. [Функционал API, эндпойнты и технические особенности](#2)
 ## 3. [Стек технологий](#3)
@@ -52,6 +50,8 @@ Backend API
 ![image](https://github.com/user-attachments/assets/23f82ad2-786a-49d8-8226-43ad936aec82)
 ![image](https://github.com/user-attachments/assets/f227969c-aa85-4e36-9477-97e3a45ab711)
 ![image](https://github.com/user-attachments/assets/92308dca-ed86-40bc-ae80-024a7565ad96)
+![image](https://github.com/user-attachments/assets/b68a4c0f-406c-4eeb-90f2-fb3f358f14ed)
+
 
 
 ## 4. Запуск проекта через docker compose и ссыылка на него <a id=4></a>
