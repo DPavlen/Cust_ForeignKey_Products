@@ -154,6 +154,7 @@ DJOSER = {
         "user_create": "users.serializers.CustomUserSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
+        "token_destroy": "users.serializers.CustomTokenDestroySerializer",
     },
     "PERMISSIONS": {
         "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],

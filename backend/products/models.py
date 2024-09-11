@@ -1,15 +1,13 @@
 import uuid
 import logging
-#
-# from products.manager import UniqueProductManager, CustForeignKey
 
-logger = logging.getLogger("django")
-
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.fields.related import ForeignKey
 from model_utils.models import TimeStampedModel
 
-from users.models import CustUser
+User = get_user_model()
+logger = logging.getLogger("django")
 
 
 class Attr(TimeStampedModel):
@@ -44,7 +42,7 @@ class Product(TimeStampedModel):
         editable=False,
     )
     user = models.ForeignKey(
-        CustUser,
+        User,
         on_delete=models.CASCADE,
         related_name="products",
         verbose_name="Пользователь",

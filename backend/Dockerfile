@@ -20,7 +20,7 @@ COPY pyproject.toml /app/
 RUN poetry lock && poetry install --only main
 
 # Устанавливаем pytest
-RUN poetry add pytest
+#RUN poetry add pytest
 
 COPY . /app/
 
