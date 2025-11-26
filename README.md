@@ -1,5 +1,3 @@
-# Cust_ForeignKey_Products
-
 ## 1. [Задание и требования](#1)
 ## 2. [Функционал API, эндпойнты и технические особенности](#2)
 ## 3. [Стек технологий](#3)
@@ -46,6 +44,15 @@
 [![Gunicorn](https://img.shields.io/badge/Gunicorn-%2020.0.4-blue?style=flat-square&logo=gunicorn)](https://gunicorn.org/) 
 [![Docker](https://img.shields.io/badge/Docker-%2024.0.5-blue?style=flat-square&logo=docker)](https://www.docker.com/)
 [![DockerCompose](https://img.shields.io/badge/Docker_Compose-%202.21.0-blue?style=flat-square&logo=docsdotrs)](https://docs.docker.com/compose/)
+
+Backend API
+![image](https://github.com/user-attachments/assets/f36ed2e9-04de-4781-aad5-b97fe6570427)
+![image](https://github.com/user-attachments/assets/23f82ad2-786a-49d8-8226-43ad936aec82)
+![image](https://github.com/user-attachments/assets/f227969c-aa85-4e36-9477-97e3a45ab711)
+![image](https://github.com/user-attachments/assets/92308dca-ed86-40bc-ae80-024a7565ad96)
+![image](https://github.com/user-attachments/assets/b68a4c0f-406c-4eeb-90f2-fb3f358f14ed)
+
+
 
 ## 4. Запуск проекта через docker compose и ссыылка на него <a id=4></a>
 ## Запуск проекта локально в Docker-контейнерах с помощью Docker Compose
