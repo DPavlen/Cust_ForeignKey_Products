@@ -15,17 +15,10 @@ WORKDIR /app
 
 RUN pip install poetry
 
-COPY pyproject.toml /app/
+COPY pyproject.toml poetry.lock ./
 
-RUN poetry lock && poetry install --only main
+RUN poetry install --no-root --only main
 
-# Устанавливаем pytest
-#RUN poetry add pytest
-
-COPY . /app/
-
-#RUN poetry run pytest --version
+COPY backend/ ./
 
 CMD ["bash", "/app/run_django.sh"]
-
-RUN poetry install --no-root
