@@ -4,6 +4,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.fields.related import ForeignKey
+from django.db.models.fields.related_descriptors import ReverseManyToOneDescriptor
 from model_utils.models import TimeStampedModel
 
 User = get_user_model()
@@ -11,7 +12,7 @@ logger = logging.getLogger("django")
 
 
 class Attr(TimeStampedModel):
-    """Модель атрибутов."""
+    """Атрибут продукта (например: Цвет, Вкус)."""
     id = models.UUIDField(
         "id",
         primary_key=True,
@@ -34,7 +35,7 @@ class Attr(TimeStampedModel):
 
 
 class Product(TimeStampedModel):
-    """Модель продукта."""
+    """Продукт с набором атрибутов."""
     id = models.UUIDField(
         "id",
         primary_key=True,
@@ -72,7 +73,7 @@ class Product(TimeStampedModel):
 
 
 class ProductAttr(TimeStampedModel):
-    """Промежуточная Модель связи атрибутов и продукта ."""
+    """Связь продукта с атрибутом и его значением."""
     id = models.UUIDField(
         "id",
         primary_key=True,
@@ -107,37 +108,40 @@ class ProductAttr(TimeStampedModel):
                 f"имеет значение:  {self.value}")
 
 
-class CustForeignKey(ForeignKey):
-    """
-    Кастомный внешний ключ для установки связи "ManyToOne" между моделями.
-    Обеспечивает использование кастомного менеджера для обратных связей.
-    """
+class UniqueProductManager:
+    """Кастомный интерфейс обратной связи Product -> UniqueProduct."""
 
-    def contribute_to_related_class(self, cls, related):
-        """Настройка класса модели для использования кастомного менеджера
-        при обращении к обратной связи."""
-        super().contribute_to_related_class(cls, related)
-        setattr(cls, self.name, UniqueProductManager())
-
-
-class UniqueProductManager(models.Manager):
-    """Кастомный менеджер для модели UniqueProduct."""
+    def __init__(self, related_manager):
+        """Оборачивает стандартный ReverseManyToOne менеджер."""
+        self._related_manager = related_manager
 
     def all(self):
-        """Переопределяет метод all() для использования кастомного менеджера."""
-        return super().all()
+        """Возвращает все UniqueProduct для данного Product."""
+        return self._related_manager.all()
 
-    def generate(self, instance):
-        """Создает уникальный продукт на основе переданного экземпляра."""
-        return self.create(product=instance)
+    def generate(self):
+        """Создаёт новый UniqueProduct для данного Product."""
+        return self._related_manager.create()
+
+
+class CustReverseManyToOneDescriptor(ReverseManyToOneDescriptor):
+    """Дескриптор обратной связи с кастомным интерфейсом."""
+
+    def __get__(self, instance, cls=None):
+        """Возвращает UniqueProductManager вместо стандартного менеджера."""
+        if instance is None:
+            return self
+        related_manager = super().__get__(instance, cls)
+        return UniqueProductManager(related_manager)
+
+
+class CustForeignKey(ForeignKey):
+    """ForeignKey с кастомным интерфейсом обратной связи через related_accessor_class."""
+    related_accessor_class = CustReverseManyToOneDescriptor
 
 
 class UniqueProduct(TimeStampedModel):
-    """
-    Модель уникального продукта.
-    CustForeignKey создаёт дополнительную абстракцию
-    между Product и UniqueProduct.
-    """
+    """Уникальный продукт с конкретными значениями атрибутов."""
     id = models.UUIDField(
         "id",
         primary_key=True,
@@ -150,12 +154,12 @@ class UniqueProduct(TimeStampedModel):
         related_name="unique_products",
         verbose_name="Уникальный продукт"
     )
+    #attr = models.ForeignKey(ProductAttr, on_delete=models.PROTECT)
     attrs = models.ManyToManyField(
         "ProductAttr",
         related_name="unique_products",
         verbose_name="Атрибуты уникального продукта"
     )
-    objects = UniqueProductManager()
 
     class Meta:
         verbose_name = "Уникальный продукт"

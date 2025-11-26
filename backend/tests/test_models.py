@@ -1,79 +1,101 @@
 import pytest
-from django.test import TestCase
-from products.models import Product, ProductAttr, UniqueProduct, Attr
+from products.models import Product, UniqueProduct, UniqueProductManager
 from users.models import CustUser
 
 
-class UniqueProductTest(TestCase):
+@pytest.fixture
+def user():
+    """Создание тестового пользователя."""
+    return CustUser.objects.create(username="test_user")
 
-    def setUp(self):
-        """Настройка начальных данных для тестов."""
-        # Создаем пользователя
-        self.user = CustUser.objects.create(username="test_pavlen")
 
-        # Создаем продукты
-        self.product_1 = Product.objects.create(name="Тест Колбаса докторская", user=self.user)
-        self.product_2 = Product.objects.create(name="Тест Помидоры", user=self.user)
+@pytest.fixture
+def product(user):
+    """Создание тестового продукта."""
+    return Product.objects.create(name="Тестовый продукт", user=user)
 
-        # Создаем атрибуты
-        self.attr_taste = Attr.objects.create(name="Вкус")
-        self.attr_color = Attr.objects.create(name="Цвет")
 
-        # Создаем промежуточную ProductAttr с ссылками на продукты и атрибуты
-        self.product_attr_1 = ProductAttr.objects.create(
-            product=self.product_1, attr=self.attr_taste, value="Слабосоленая")
-        self.product_attr_2 = ProductAttr.objects.create(
-            product=self.product_1, attr=self.attr_color, value="Бордовый")
-        self.product_attr_3 = ProductAttr.objects.create(
-            product=self.product_2, attr=self.attr_taste, value="Ароматный")
-        self.product_attr_4 = ProductAttr.objects.create(
-            product=self.product_2, attr=self.attr_color, value="Красный")
+@pytest.fixture
+def product_with_unique(product):
+    """Создание продукта с уникальным продуктом."""
+    unique = UniqueProduct.objects.create(product=product)
+    return product, unique
 
-        # Создаем уникальные продукты и прицепляем к ним атрибуты
-        self.unique_product_1 = UniqueProduct.objects.create(product=self.product_1)
-        self.unique_product_1.attrs.add(self.product_attr_1, self.product_attr_2)
-        self.unique_product_2 = UniqueProduct.objects.create(product=self.product_2)
-        self.unique_product_2.attrs.add(self.product_attr_3, self.product_attr_4)
 
-    def test_all_method(self):
-        """Проверка работы метода all()."""
+@pytest.mark.django_db
+class TestCustForeignKey:
+    """Тесты кастомного ForeignKey с related_accessor_class."""
 
-        unique_products_1 = self.product_1.unique_products.all()
-        unique_products_2 = self.product_2.unique_products.all()
+    def test_custom_manager_type(self, product):
+        """Проверка, что product.unique_products возвращает кастомный менеджер."""
+        manager = product.unique_products
 
-        # Добавляем различные проверки
-        self.assertEqual(len(unique_products_1), 1)
-        self.assertEqual(len(unique_products_2), 1)
-        self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_taste).exists())
-        self.assertTrue(unique_products_1[0].attrs.filter(attr=self.attr_color).exists())
-        self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_taste).exists())
-        self.assertTrue(unique_products_2[0].attrs.filter(attr=self.attr_color).exists())
+        print(f"\nТип менеджера: {type(manager).__name__}")
+        print(f"Модуль: {type(manager).__module__}")
 
-        # Проверка общего количества уникальных продуктов
-        total_unique_products = UniqueProduct.objects.count()
-        self.assertEqual(total_unique_products, 2)
+        assert isinstance(manager, UniqueProductManager), (
+            f"Ожидается UniqueProductManager, получен {type(manager)}"
+        )
 
-    def test_generate_method(self):
-        """Проверка работы метода generate()."""
-        unique_product = UniqueProduct.objects.generate(self.product_1)
-        self.assertIsNotNone(unique_product)
-        self.assertIsInstance(unique_product, UniqueProduct)
-        self.assertEqual(unique_product.product, self.product_1)
-        self.assertTrue(UniqueProduct.objects.filter(id=unique_product.id).exists())
+    def test_all_method_proxy(self, product_with_unique):
+        """Проверка, что метод all() проксирует стандартный менеджер."""
+        product, unique = product_with_unique
 
-    def test_cust_related_manager(self):
-        # Получаем имя self.product_1
-        product = Product.objects.get(name="Тест Колбаса докторская")
-
-        # Получаем связанные объекты через кастомный внешний ключ
         unique_products = product.unique_products.all()
 
-        # Проверяем что данные в unique_products есть
-        self.assertIsNotNone(unique_products)
+        print(f"\nВызов: product.unique_products.all()")
+        print(f"Результат: {list(unique_products)}")
+        print(f"Количество: {len(unique_products)}")
 
-        # Проверяем, что обратное связывание через кастомный внешний ключ
-        # работает корректно
-        self.assertEqual(len(unique_products), 1)
+        assert len(unique_products) == 1
+        assert unique_products[0] == unique
+        assert unique_products[0].product == product
 
-        # Проверяем, что уникальный продукт совпадает с ожидаемым
-        self.assertEqual(unique_products[0], self.unique_product_1)
+    def test_generate_method_creates_unique_product(self, product):
+        """Проверка, что метод generate() создаёт UniqueProduct."""
+        initial_count = product.unique_products.all().count()
+
+        new_unique = product.unique_products.generate()
+
+        print(f"\nВызов: product.unique_products.generate()")
+        print(f"Создан: {new_unique}")
+        print(f"ID: {new_unique.id}")
+        print(f"Количество до: {initial_count}, после: {product.unique_products.all().count()}")
+
+        assert isinstance(new_unique, UniqueProduct)
+        assert new_unique.product == product
+        assert product.unique_products.all().count() == initial_count + 1
+        assert UniqueProduct.objects.filter(id=new_unique.id).exists()
+
+    def test_multiple_products_isolation(self, user):
+        """Проверка изоляции UniqueProduct между разными Product."""
+        product_1 = Product.objects.create(name="Продукт 1", user=user)
+        product_2 = Product.objects.create(name="Продукт 2", user=user)
+
+        unique_1 = product_1.unique_products.generate()
+        unique_2 = product_2.unique_products.generate()
+
+        product_1_uniques = list(product_1.unique_products.all())
+        product_2_uniques = list(product_2.unique_products.all())
+
+        print(f"\nProduct 1 содержит {len(product_1_uniques)} UniqueProduct")
+        print(f"Product 2 содержит {len(product_2_uniques)} UniqueProduct")
+
+        assert len(product_1_uniques) == 1
+        assert len(product_2_uniques) == 1
+        assert unique_1 in product_1_uniques
+        assert unique_2 in product_2_uniques
+        assert unique_1 not in product_2_uniques
+        assert unique_2 not in product_1_uniques
+
+    def test_custom_interface_has_required_methods(self, product):
+        """Проверка наличия методов all() и generate() в кастомном интерфейсе."""
+        manager = product.unique_products
+
+        print(f"\nМетод all(): {hasattr(manager, 'all')}")
+        print(f"Метод generate(): {hasattr(manager, 'generate')}")
+
+        assert hasattr(manager, "all"), "Метод all() отсутствует"
+        assert hasattr(manager, "generate"), "Метод generate() отсутствует"
+        assert callable(manager.all), "Метод all() не вызываемый"
+        assert callable(manager.generate), "Метод generate() не вызываемый"
